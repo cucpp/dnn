@@ -1,5 +1,5 @@
 ################################################################################
-# Python Files
+# Python
 ################################################################################
 
 # Byte-compiled / optimized / DLL files
@@ -66,7 +66,10 @@ instance/
 .scrapy
 
 # Sphinx documentation
-docs/_build/
+docs/build/
+docs/source/.static
+docs/source/.templates
+docs/source/.generate
 
 # PyBuilder
 target/
@@ -96,40 +99,6 @@ ENV/
 
 # Rope project settings
 .ropeproject
-
-# VIM swap files
-*.swp
-
-################################################################################
-# MacOS Files
-################################################################################
-
-**.DS_Store
-.AppleDouble
-.LSOverride
-
-# Icon must end with two \r
-Icon
-
-
-# Thumbnails
-._*
-
-# Files that might appear in the root of a volume
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
-.Trashes
-.VolumeIcon.icns
-.com.apple.timemachine.donotpresent
-
-# Directories potentially created on remote AFP share
-.AppleDB
-.AppleDesktop
-Network Trash Folder
-Temporary Items
-.apdisk
 
 ################################################################################
 # C/C++
@@ -168,3 +137,15 @@ Temporary Items
 *.out
 *.app
 
+################################################################################
+# macOSX Files
+################################################################################
+
+**DS_Store
+
+################################################################################
+# Documentation
+################################################################################
+
+docs/_build
+docs/xml
