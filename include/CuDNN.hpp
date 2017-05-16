@@ -472,29 +472,28 @@ class FilterDescriptor :
     public detail::RAII<cudnnFilterDescriptor_t,
                         cudnnCreateFilterDescriptor,
                         cudnnDestroyFilterDescriptor> {
+    FilterDescriptor() {
+        std::static_assert(  // make sure correct data type is provided
+            std::is_same<T, float>::value || std::is_same<T, double>::value);
+    }
+};
+
+template <typename T>
+class Filter4dDescriptor : public FilterDescriptor<T> {
     /**
-     * @brief      Creates a new filter descriptor object.
+     * @brief      Constructs the filter descriptor object.
      *
      * @param[in]  format  Tensor format.
      * @param[in]  k       K-dimension.
      * @param[in]  c       C-dimension.
      * @param[in]  h       H-dimension.
      * @param[in]  w       W-dimension.
-     *
-     * @return     Filter descriptor object.
      */
-    static inline FilterDescriptor create(TensorFormat format,
-        int k, int c, int h, int w) {
-        FilterDescriptor object;
+    Filter4dDescriptor(TensorFormat format, int k, int c, int h, int w) :
+        FilterDescriptor() {
         auto type = detail::dataType<T>::type;
         checkStatus(
             cudnnSetFilter4dDescriptor(object, type, format, k, c, h, w));
-        return object;
-    }
-
-    FilterDescriptor() {
-        std::static_assert(  // make sure correct data type is provided
-            std::is_same<T, float>::value || std::is_same<T, double>::value);
     }
 
  public:
@@ -509,8 +508,8 @@ class FilterDescriptor :
      *
      * @return     NCHW filter descriptor object.
      */
-    static FilterDescriptor createNCHW(int k, int c, int h, int w) {
-        return create(CUDNN_TENSOR_NCHW, k, c, h, w);
+    static Filter4dDescriptor createNCHW(int k, int c, int h, int w) {
+        return Filter4dDescriptor(CUDNN_TENSOR_NCHW, k, c, h, w);
     }
 
     /**
@@ -524,10 +523,11 @@ class FilterDescriptor :
      *
      * @return     NCHW filter descriptor object.
      */
-    static FilterDescriptor createNHWC(int k, int c, int h, int w) {
-        return create(CUDNN_TENSOR_NHWC, k, c, h, w);
+    static Filter4dDescriptor createNHWC(int k, int c, int h, int w) {
+        return Filter4dDescriptor(CUDNN_TENSOR_NHWC, k, c, h, w);
     }
 };
+
 
 //////////////////////////////////////////////////////////////////////////////
 // CuDNN LRN Descriptor
@@ -1015,4 +1015,3 @@ class Tensor {
 }   // namespace CuDNN
 
 #endif  // INCLUDE_CUDNN_HPP_
-
