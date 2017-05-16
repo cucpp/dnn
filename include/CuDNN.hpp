@@ -293,8 +293,10 @@ class Buffer {
      * @param[in]  size  Size of the buffer
      */
     explicit Buffer (size_t size) : mBuffer(new CudaBuffer(size)) {
-        std::static_assert(  // make sure correct data type is provided
-            std::is_same<T, float>::value || std::is_same<T, double>::value);
+        static_assert(  // make sure correct data type is provided
+		      std::is_same<T, float>::value ||
+		      std::is_same<T, double>::value,
+		      "Invalid CuDNN::detail::Buffer<T> data-type");
     }
 
     /**
@@ -372,6 +374,7 @@ class ActivationDescriptor :
 /**
  * @brief      CuDNN convolution descriptor class.
  */
+template<typename T>
 class ConvolutionDescriptor :
     public detail::RAII<cudnnConvolutionDescriptor_t,
                         cudnnCreateConvolutionDescriptor,
@@ -399,7 +402,7 @@ class ConvolutionDescriptor :
         int upscaleX = 1,
         int upscaleY = 1) {
         ConvolutionDescriptor object;
-        checkStatus(
+	checkStatus(
             cudnnSetConvolution2dDescriptor(
                 object,
                 padH,
@@ -408,7 +411,8 @@ class ConvolutionDescriptor :
                 strideW,
                 upscaleX,
                 upscaleY,
-                CUDNN_CONVOLUTION));
+                CUDNN_CONVOLUTION,
+		detail::dataType<T>::type));
         return object;
     }
 
@@ -424,7 +428,7 @@ class ConvolutionDescriptor :
      *
      * @return     Cross-correlation object.
      */
-    static ConvolutionDescriptor createCrossCorrelation(
+     static ConvolutionDescriptor createCrossCorrelation(
         int padH,
         int padW,
         int strideH,
@@ -441,7 +445,8 @@ class ConvolutionDescriptor :
                 strideW,
                 upscaleX,
                 upscaleY,
-                CUDNN_CROSS_CORRELATION));
+                CUDNN_CROSS_CORRELATION,
+		detail::dataType<T>::type));
         return object;
     }
 
@@ -472,11 +477,12 @@ class FilterDescriptor :
     public detail::RAII<cudnnFilterDescriptor_t,
                         cudnnCreateFilterDescriptor,
                         cudnnDestroyFilterDescriptor> {
+ protected:
     FilterDescriptor() {
         static_assert(  // make sure correct data type is provided
 		      std::is_same<T, float>::value ||
 		      std::is_same<T, double>::value,
-		      "Invalid cudnn::FilterDescriptor data-type");
+		      "Invalid Cudnn::FilterDescriptor<T> data-type");
     }
 };
 
@@ -492,10 +498,10 @@ class Filter4dDescriptor : public FilterDescriptor<T> {
      * @param[in]  w       W-dimension.
      */
     Filter4dDescriptor(TensorFormat format, int k, int c, int h, int w) :
-        FilterDescriptor() {
+        FilterDescriptor<T>() {
         auto type = detail::dataType<T>::type;
         checkStatus(
-            cudnnSetFilter4dDescriptor(object, type, format, k, c, h, w));
+	    cudnnSetFilter4dDescriptor(*this, type, format, k, c, h, w));
     }
 
  public:
@@ -647,11 +653,12 @@ class TensorDescriptor :
  */
 template <typename T>
 class Convolution {
+
     Convolution() {
         static_assert(  // make sure correct data type is provided
 		      std::is_same<T, float>::value ||
 		      std::is_same<T, double>::value,
-		      "Invalid Convolution data-type");
+		      "Invalid CuDNN::Convolution<T> data-type");
     }
 
  public:
@@ -669,11 +676,11 @@ class Convolution {
      * 
      * @return     Workspace buffer object.
      */
-    template <typename T> detail::Buffer<T> static createForwardWorkspace(
+     detail::Buffer<T> static createForwardWorkspace(
         Handle handle,
         TensorDescriptor inputDescriptor,
         FilterDescriptor<T> filterDescriptor,
-        ConvolutionDescriptor convolutionDescritor,
+        ConvolutionDescriptor<T> convolutionDescritor,
         TensorDescriptor outputDescriptor,
         ConvolutionFwdAlgo algorithm) {
         size_t workspaceSize;
@@ -703,11 +710,11 @@ class Convolution {
      *
      * @return     Workspace buffer object.
      */
-    template <typename T> detail::Buffer<T> createBackwardDataWorkspace(
+    detail::Buffer<T> createBackwardDataWorkspace(
         Handle handle,
         TensorDescriptor diffInputDescriptor,
         FilterDescriptor<T> filterDescriptor,
-        ConvolutionDescriptor convolutionDescritor,
+        ConvolutionDescriptor<T> convolutionDescritor,
         TensorDescriptor diffOutputDescriptor,
         ConvolutionBwdDataAlgo algorithm) {
         size_t workspaceSize;
@@ -737,11 +744,11 @@ class Convolution {
      *
      * @return     Workspace buffer object.
      */
-    template <typename T> detail::Buffer<T> createBackwardFilterWorkspace(
+    detail::Buffer<T> createBackwardFilterWorkspace(
         Handle handle,
         TensorDescriptor inputDescriptor,
         FilterDescriptor<T> filterDescriptor,
-        ConvolutionDescriptor convolutionDescritor,
+        ConvolutionDescriptor<T> convolutionDescritor,
         TensorDescriptor diffOutputDescriptor,
         ConvolutionBwdFilterAlgo algorithm) {
         size_t workspaceSize;
