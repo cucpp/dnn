@@ -1,5 +1,5 @@
 /*!  
-    @file CuDNN.hpp
+    @file cudnn.hpp
 
     NVIDIA CuDNN C++ single header wrapper-library.
 
@@ -473,8 +473,10 @@ class FilterDescriptor :
                         cudnnCreateFilterDescriptor,
                         cudnnDestroyFilterDescriptor> {
     FilterDescriptor() {
-        std::static_assert(  // make sure correct data type is provided
-            std::is_same<T, float>::value || std::is_same<T, double>::value);
+        static_assert(  // make sure correct data type is provided
+		      std::is_same<T, float>::value ||
+		      std::is_same<T, double>::value,
+		      "Invalid cudnn::FilterDescriptor data-type");
     }
 };
 
@@ -643,10 +645,13 @@ class TensorDescriptor :
 /**
  * @brief      CuDNN convolution class.
  */
+template <typename T>
 class Convolution {
     Convolution() {
-        std::static_assert(  // make sure correct data type is provided
-            std::is_same<T, float>::value || std::is_same<T, double>::value);
+        static_assert(  // make sure correct data type is provided
+		      std::is_same<T, float>::value ||
+		      std::is_same<T, double>::value,
+		      "Invalid Convolution data-type");
     }
 
  public:
@@ -886,8 +891,8 @@ class Tensor {
      * @return     Size in number of elements (e.g.not number of bytes)
      */
     static size_t dimsToSize(const std::vector<int> dims) {
-        return std::dimsToSize(dims.begin(), dims.end(), 1,
-            std::multiplies<int>());
+        return std::accumulate(dims.begin(), dims.end(), 1,
+			       std::multiplies<int>());
     }
     /**
      * @brief      Factory function that creates a tensor descriptor object.
